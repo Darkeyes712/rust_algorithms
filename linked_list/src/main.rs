@@ -8,4 +8,9 @@ fn main() {
     ll.print();
     ll.pop();
     ll.print();
+
+    ll.prepend(4);
+    ll.print();
+
+    ll.playground();
 }

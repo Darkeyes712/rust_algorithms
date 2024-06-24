@@ -6,4 +6,6 @@ fn main() {
     ll.append(1);
     ll.append(2);
     ll.print();
+    ll.pop();
+    ll.print();
 }

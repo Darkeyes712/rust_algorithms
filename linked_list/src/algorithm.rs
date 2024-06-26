@@ -322,6 +322,144 @@ impl<T: std::fmt::Debug + Clone> KolzoLinkedList<T> {
         None
     }
 
+    /// Inserts a new element with the specified value at the given index in the linked list.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The position at which to insert the new element. Must be a non-negative integer.
+    /// * `value` - The value to insert into the linked list.
+    ///
+    /// # Behavior
+    ///
+    /// * If the index is negative or greater than the length of the list, the function returns without inserting.
+    /// * If the index is `0`, the new element is prepended to the list.
+    /// * If the index is equal to the length of the list, the new element is appended to the list.
+    /// * Otherwise, the new element is inserted at the specified position, and subsequent elements are shifted.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut list = LinkedList::new();
+    /// list.append(10);
+    /// list.append(20);
+    /// list.append(30);
+    ///
+    /// list.insert(2, 25); // Insert 25 at index 2
+    ///
+    /// assert_eq!(list.get(0), Some(&10));
+    /// assert_eq!(list.get(1), Some(&20));
+    /// assert_eq!(list.get(2), Some(&25));
+    /// assert_eq!(list.get(3), Some(&30));
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function does not panic.
+    pub fn insert(&mut self, index: i64, value: T) {
+        if index.is_negative() || index as u64 >= self.length {
+            return;
+        }
+
+        if index == 0 {
+            self.prepend(value);
+            return;
+        }
+
+        if index as u64 == self.length {
+            self.append(value);
+            return;
+        }
+
+        let mut current = &mut self.head;
+        let mut counter = 0;
+
+        while counter < index - 1 {
+            if let Some(ref mut node) = current {
+                current = &mut node.next;
+            } else {
+                return;
+            }
+            counter += 1;
+        }
+
+        if let Some(ref mut node) = current {
+            let mut new_node = Box::new(Node::new(value));
+            new_node.next = node.next.take();
+            node.next = Some(new_node);
+        }
+    }
+
+    /// Removes the element at the specified index from the linked list.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The index of the element to be removed. Must be a non-negative integer and less than the length of the list.
+    ///
+    /// # Behavior
+    ///
+    /// * If the index is out of bounds (negative or greater than or equal to the length of the list), the function returns without making any changes.
+    /// * If the index is `0`, the head element is removed.
+    /// * If the index is the last element, the tail pointer is updated appropriately.
+    /// * For all other indices, the element at the specified index is removed and the list is re-linked.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut list = LinkedList::new();
+    /// list.append(10);
+    /// list.append(20);
+    /// list.append(30);
+    /// list.append(40);
+    ///
+    /// list.remove(2); // Removes the element at index 2 (value 30)
+    ///
+    /// assert_eq!(list.get(0), Some(&10));
+    /// assert_eq!(list.get(1), Some(&20));
+    /// assert_eq!(list.get(2), Some(&40));
+    /// assert_eq!(list.length, 3);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function does not panic.
+    pub fn remove(&mut self, index: i64) {
+        if index.is_negative() || index as u64 >= self.length {
+            return;
+        }
+
+        if index == 0 {
+            self.pop_first();
+            self.length -= 1;
+            return;
+        }
+
+        let mut current = &mut self.head;
+        let mut counter = 0;
+
+        while counter < index - 1 {
+            if let Some(ref mut node) = current {
+                current = &mut node.next;
+            } else {
+                return;
+            }
+            counter += 1;
+        }
+
+        if let Some(ref mut node) = current {
+            if index as u64 == self.length - 1 {
+                if let Some(ref mut last_node) = node.next {
+                    Some(last_node).take();
+                    self.tail = Some(&mut **node);
+                    self.length -= 1;
+                    return;
+                }
+            } else if let Some(ref mut mid_node) = node.next.take() {
+                node.next = mid_node.next.take();
+            }
+            self.length -= 1;
+        }
+    }
+
     pub fn playground(&self) {
         let mut new_ll: KolzoLinkedList<i32> = KolzoLinkedList::new();
 
@@ -439,7 +577,6 @@ mod tests {
 
     #[test]
     fn test_set() {
-        // Create a new empty linked list
         let mut list: KolzoLinkedList<i32> = KolzoLinkedList::new();
 
         assert_eq!(list.set(0, 10), None);
@@ -461,5 +598,73 @@ mod tests {
         assert_eq!(list.set(3, 40), None);
 
         assert_eq!(list.set(-1, 50), None);
+    }
+
+    #[test]
+    fn test_insert() {
+        let mut list: KolzoLinkedList<i32> = KolzoLinkedList::new();
+
+        list.insert(0, 10);
+        assert_eq!(list.get(0), Some(&10));
+
+        list.append(20);
+        list.append(30);
+
+        list.insert(0, 5);
+        assert_eq!(list.get(0), Some(&5));
+        assert_eq!(list.get(1), Some(&10));
+        assert_eq!(list.get(2), Some(&20));
+        assert_eq!(list.get(3), Some(&30));
+
+        list.insert(4, 35);
+        assert_eq!(list.get(4), Some(&35));
+
+        list.insert(2, 15);
+        assert_eq!(list.get(0), Some(&5));
+        assert_eq!(list.get(1), Some(&10));
+        assert_eq!(list.get(2), Some(&15));
+        assert_eq!(list.get(3), Some(&20));
+        assert_eq!(list.get(4), Some(&30));
+        assert_eq!(list.get(5), Some(&35));
+
+        list.insert(10, 40);
+        assert_eq!(list.get(6), None);
+
+        list.insert(-1, 50);
+        assert_eq!(list.get(6), None);
+    }
+
+    #[test]
+    fn test_remove() {
+        let mut list: KolzoLinkedList<i32> = KolzoLinkedList::new();
+
+        list.remove(0);
+        assert_eq!(list.length, 0);
+
+        list.append(10);
+        list.append(20);
+        list.append(30);
+        list.append(40);
+
+        list.remove(0);
+        assert_eq!(list.get(0), Some(&20));
+        assert_eq!(list.length, 3);
+
+        list.remove(2);
+        assert_eq!(list.get(1), Some(&30));
+        assert_eq!(list.get(2), None);
+        assert_eq!(list.length, 2);
+
+        list.append(50);
+        list.remove(1);
+        assert_eq!(list.get(0), Some(&20));
+        assert_eq!(list.get(1), Some(&50));
+        assert_eq!(list.length, 2);
+
+        list.remove(10);
+        assert_eq!(list.length, 2);
+
+        list.remove(-1);
+        assert_eq!(list.length, 2);
     }
 }

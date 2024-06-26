@@ -15,6 +15,10 @@ fn main() {
     ll.print();
     ll.set(1, 49);
     ll.print();
+    ll.insert(1, 100);
+    ll.print();
+    ll.remove(1);
+    ll.print();
 
     ll.playground();
 }

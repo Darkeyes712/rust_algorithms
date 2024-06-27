@@ -19,6 +19,8 @@ fn main() {
     ll.print();
     ll.remove(1);
     ll.print();
+    ll.reverse();
+    ll.print();
 
     ll.playground();
 }

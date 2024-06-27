@@ -460,6 +460,44 @@ impl<T: std::fmt::Debug + Clone> KolzoLinkedList<T> {
         }
     }
 
+    /// Reverses the linked list in place.
+    ///
+    /// # Description
+    /// This method reverses the order of the nodes in the linked list. After the
+    /// operation, the head of the list will be the original tail, and the tail
+    /// will be the original head.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut list = LinkedList::new();
+    /// list.append(1);
+    /// list.append(2);
+    /// list.append(3);
+    ///
+    /// list.reverse();
+    ///
+    /// assert_eq!(list.get(0), Some(&3));
+    /// assert_eq!(list.get(1), Some(&2));
+    /// assert_eq!(list.get(2), Some(&1));
+    /// ```
+    ///
+    /// # Panics
+    /// This function does not panic.
+    pub fn reverse(&mut self) {
+        let mut previous_node = None;
+        let mut current_node = self.head.take();
+
+        while let Some(mut node_that_is_iterated) = current_node {
+            let next_node = node_that_is_iterated.next.take();
+            node_that_is_iterated.next = previous_node;
+            previous_node = Some(node_that_is_iterated);
+            current_node = next_node;
+        }
+
+        self.head = previous_node;
+    }
+
     pub fn playground(&self) {
         let mut new_ll: KolzoLinkedList<i32> = KolzoLinkedList::new();
 
@@ -666,5 +704,49 @@ mod tests {
 
         list.remove(-1);
         assert_eq!(list.length, 2);
+    }
+
+    #[test]
+    fn test_reverse_empty_list() {
+        let mut list: KolzoLinkedList<i32> = KolzoLinkedList::new();
+        list.reverse();
+        assert_eq!(list.get(0), None);
+    }
+
+    #[test]
+    fn test_reverse_single_element_list() {
+        let mut list: KolzoLinkedList<i32> = KolzoLinkedList::new();
+        list.append(1);
+        list.reverse();
+        assert_eq!(list.get(0), Some(&1));
+    }
+
+    #[test]
+    fn test_reverse_multiple_elements_list() {
+        let mut list: KolzoLinkedList<i32> = KolzoLinkedList::new();
+        list.append(1);
+        list.append(2);
+        list.append(3);
+
+        list.reverse();
+
+        assert_eq!(list.get(0), Some(&3));
+        assert_eq!(list.get(1), Some(&2));
+        assert_eq!(list.get(2), Some(&1));
+    }
+
+    #[test]
+    fn test_reverse_twice() {
+        let mut list: KolzoLinkedList<i32> = KolzoLinkedList::new();
+        list.append(1);
+        list.append(2);
+        list.append(3);
+
+        list.reverse();
+        list.reverse();
+
+        assert_eq!(list.get(0), Some(&1));
+        assert_eq!(list.get(1), Some(&2));
+        assert_eq!(list.get(2), Some(&3));
     }
 }

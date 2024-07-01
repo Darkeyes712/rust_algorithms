@@ -137,21 +137,28 @@ impl<T: std::fmt::Debug + Clone> KolzoLinkedList<T> {
             return None;
         }
 
-        if self.head.as_ref().unwrap().next.is_none() {
-            let head = self.head.take().unwrap();
-            self.tail = None;
-            self.length -= 1;
-
-            return Some(head.data);
+        if let Some(node) = &self.head {
+            if node.next.is_none() {
+                let head_value = self.head.take().map(|head| {
+                    self.tail = None;
+                    self.length -= 1;
+                    head.data
+                });
+                return head_value;
+            }
         }
 
         let mut current = self.head.as_mut().map(|node| &mut **node);
         while let Some(node) = current {
-            if node.next.as_ref().unwrap().next.is_none() {
-                let tail = node.next.take().unwrap();
-                self.tail = Some(node as *mut Node<T>);
-                self.length -= 1;
-                return Some(tail.data);
+            if let Some(existing_node) = &node.next {
+                if existing_node.next.is_none() {
+                    let tail_value = node.next.take().map(|tail| {
+                        self.tail = Some(node as *mut Node<T>);
+                        self.length -= 1;
+                        tail.data
+                    });
+                    return tail_value;
+                }
             }
             current = node.next.as_mut().map(|node| &mut **node);
         }
@@ -212,18 +219,17 @@ impl<T: std::fmt::Debug + Clone> KolzoLinkedList<T> {
     ///
     /// This function does not panic.
     pub fn pop_first(&mut self) -> Option<T> {
-        if self.head.is_none() {
-            return None;
+        match self.head.take() {
+            Some(mut node) => {
+                let data = node.data;
+                self.head = node.next.take();
+                if self.head.is_none() {
+                    self.tail = None;
+                }
+                Some(data)
+            }
+            None => None,
         }
-
-        let mut old_head = self.head.take().unwrap();
-        self.head = old_head.next.take();
-
-        if self.head.is_none() {
-            self.tail = None;
-        }
-
-        Some(old_head.data)
     }
 
     /// Retrieves a reference to the element at the specified index in the linked list.

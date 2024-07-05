@@ -1,3 +1,7 @@
+mod algorithm;
+use algorithm::KolzoDoublyLinkedList;
+
 fn main() {
-    println!("Hello, world!");
+    // let mut ll = KolzoDoublyLinkedList::new();
+    // ll.print();
 }
